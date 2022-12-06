@@ -1,6 +1,6 @@
 {
   "name": "@kklm/monads",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "type": "commonjs",
   "gitHead": "86d8771ccdc3e61271ad00d2ff5f84b26c4ccee9",
   "publishConfig": {
