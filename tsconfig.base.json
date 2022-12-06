@@ -14,7 +14,11 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
-    "paths": {}
+    "paths": {
+      "@kklm/monads": ["packages/monads/src/index.ts"],
+      "@kklm/pattern": ["packages/pattern/src/index.ts"],
+      "@kklm/pattern-match": ["packages/pattern-match/src/index.ts"]
+    }
   },
   "exclude": ["node_modules", "tmp"]
 }
