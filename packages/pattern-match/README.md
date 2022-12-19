@@ -10,14 +10,14 @@ The default case is mandatory.
 Install it using npm (or yarn).
 
 ```bash
-npm install @safe-ts/pattern
+npm install @kklm/pattern-match
 ```
 
 It can be imported then in your *.ts files.
 
 ```typescript
 
-import match, { AnyNumber, AnyString } from '@safe-ts/pattern'
+import match, { AnyNumber, AnyString } from '@kklm/pattern-match'
 
 // (...)
 

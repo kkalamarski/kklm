@@ -8,7 +8,7 @@ import match, {
   AnyString,
   compose,
   strict
-} from './pattern-match'
+} from '..'
 
 const Loading = Symbol('Loading')
 
