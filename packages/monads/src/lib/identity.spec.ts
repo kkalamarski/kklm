@@ -1,4 +1,4 @@
-import Identity from './Identity';
+import { Identity } from './Identity';
 
 describe('Identity Monad', () => {
   test('Identity Monad', () => {

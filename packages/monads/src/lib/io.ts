@@ -1,6 +1,6 @@
 const IOSymbol = Symbol('IO');
 
-export default interface IO<T> {
+export interface IO<T> {
   __type: typeof IOSymbol;
   map<E>(f: (value: T) => E): IO<E>;
   flatMap<E>(f: (value: T) => IO<E>): IO<E>;
@@ -8,7 +8,7 @@ export default interface IO<T> {
   unwrap: () => T;
 }
 
-export default function IO<T>(effect: () => T): IO<T> {
+export function IO<T>(effect: () => T): IO<T> {
   return {
     __type: IOSymbol,
     map: <E>(f: (value: T) => E): IO<E> => IO(() => f(effect())),

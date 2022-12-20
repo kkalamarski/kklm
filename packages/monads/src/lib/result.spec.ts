@@ -1,5 +1,4 @@
-
-import Result, { Ok, Err } from './result';
+import { Ok, Err, Result } from './result';
 
 describe('Result Monad', () => {
   test('Result Monad', () => {

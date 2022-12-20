@@ -1,4 +1,4 @@
-import Option, { None, Some } from './option';
+import { None, Some, Option } from './option';
 
 describe('Option Monad', () => {
   test('Option monad', () => {

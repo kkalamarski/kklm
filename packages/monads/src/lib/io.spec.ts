@@ -1,4 +1,4 @@
-import IO from './io';
+import { IO } from './io';
 
 describe('IO Monad', () => {
   test('IO Monad', () => {

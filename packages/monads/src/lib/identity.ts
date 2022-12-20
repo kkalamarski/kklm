@@ -1,6 +1,6 @@
 const IdentitySymbol = Symbol('Identity');
 
-export default interface Identity<T> {
+export interface Identity<T> {
   __type: typeof IdentitySymbol;
   map<E>(f: (value: T) => E): Identity<E>;
   flatMap<E>(f: (value: T) => Identity<E>): Identity<E>;
@@ -8,7 +8,7 @@ export default interface Identity<T> {
   unwrap(): T;
 }
 
-export default function Identity<T>(value: T): Identity<T> {
+export function Identity<T>(value: T): Identity<T> {
   return {
     __type: IdentitySymbol,
     map: <E>(f: (value: T) => E): Identity<E> => Identity(f(value)),

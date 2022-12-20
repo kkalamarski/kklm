@@ -1,4 +1,4 @@
-import Result, { Ok } from './result';
+import { Ok, Result } from './result';
 
 const OptionSymbol = Symbol('Option');
 
@@ -7,7 +7,7 @@ type Nullable<T> = T | null | undefined;
 const isSomeValue = <T>(x: Nullable<T>): x is T =>
   x !== undefined && x !== null;
 
-export default interface Option<T> {
+export interface Option<T> {
   __type: typeof OptionSymbol;
   map<E>(f: (value: T) => E): Option<E>;
   flatMap<E>(f: (value: T) => Option<E>): Option<E>;
@@ -18,7 +18,7 @@ export default interface Option<T> {
   match: <E>(x: { Some: (v: T) => E; None: () => E }) => E;
 }
 
-export default function Option<T>(value: Nullable<T>): Option<T> {
+export function Option<T>(value: Nullable<T>): Option<T> {
   return Some<T>(value);
 }
 

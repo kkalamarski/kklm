@@ -1,6 +1,6 @@
 const ResultSymbol = Symbol('Result');
 
-export default interface Result<Ok, Err> {
+export interface Result<Ok, Err> {
   map<O>(f: (value: Ok) => O): Result<O, Err>;
   flatMap<O>(f: (value: Ok) => Result<O, Err>): Result<O, Err>;
   toString(): string;
@@ -11,7 +11,7 @@ export default interface Result<Ok, Err> {
   __type: typeof ResultSymbol;
 }
 
-export default function Result<Ok, Err = any>(
+export function Result<Ok, Err = any>(
   value: Ok | Err
 ): Result<Ok, Err> {
   if (value instanceof Error) {
