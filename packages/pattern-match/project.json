@@ -8,7 +8,7 @@
       "executor": "@nrwl/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
-        "outputPath": "dist/packages/pattern-match",
+        "outputPath": "packages/pattern-match/dist",
         "main": "packages/pattern-match/src/index.ts",
         "tsConfig": "packages/pattern-match/tsconfig.lib.json",
         "assets": ["packages/pattern-match/*.md"]

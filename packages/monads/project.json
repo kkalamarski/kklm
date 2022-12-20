@@ -8,7 +8,7 @@
       "executor": "@nrwl/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
-        "outputPath": "dist/packages/monads",
+        "outputPath": "packages/monads/dist",
         "main": "packages/monads/src/index.ts",
         "tsConfig": "packages/monads/tsconfig.lib.json",
         "assets": ["packages/monads/*.md"]
