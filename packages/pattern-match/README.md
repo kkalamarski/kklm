@@ -21,12 +21,31 @@ import match, { AnyNumber, AnyString } from '@kklm/pattern-match'
 
 // (...)
 
-match(x)
+// with default matcher
+match<any, string>(x)
   .case(AnyNumber, () => '...')
   .case(AnyString, () => '...')
   .default(() => '...')
 
+// with unsafe unwrap
+match<any, string>(x)
+  .case(AnyNumber, () => '...')
+  .case(AnyString, () => '...')
+  .unwrap()
+
+// convert to Option monad
+match<any, string>(x)
+  .case(AnyNumber, () => '...')
+  .case(AnyString, () => '...')
+  .toOption()
+
+// convert to ResultMonad
+match<any, string>(x)
+  .case(AnyNumber, () => '...')
+  .case(AnyString, () => '...')
+  .toResult()
 ```
+
 ## Comparison with other languages
 ### Scala
 ```scala

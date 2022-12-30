@@ -1,3 +1,5 @@
+import { Option, Some, None, Result, Ok, Err } from '@kklm/monads';
+
 export const Any: unique symbol = Symbol('Any');
 export const AnyString: unique symbol = Symbol('AnyString');
 export const AnyNumber: unique symbol = Symbol('AnyNumber');
@@ -9,105 +11,170 @@ export const AnyFunction: unique symbol = Symbol('AnyFunction');
 const ComposeMatcherSymbol = Symbol('ComposeMatcher');
 const StrictMatcherSymbol = Symbol('StrictMatcher');
 
-interface ComposeMatcher {
+interface ComposeMatcher<T> {
   _type: typeof ComposeMatcherSymbol;
-  conditions: CaseValue;
+  conditions: CaseValue<T>[];
 }
 
-interface StrictMatcher {
+interface StrictMatcher<T> {
   _type: typeof StrictMatcherSymbol;
-  value: CaseValue;
+  value: CaseValue<T>;
 }
 
-export const strict = (value: CaseValue): StrictMatcher => ({
+export const strict = <T>(value: CaseValue<T>): StrictMatcher<T> => ({
   _type: StrictMatcherSymbol,
   value,
 });
 
-export const compose = (...conditions: CaseValue[]): ComposeMatcher => ({
+export const compose = <T>(
+  ...conditions: CaseValue<T>[]
+): ComposeMatcher<T> => ({
   _type: ComposeMatcherSymbol,
   conditions,
 });
 
-type CaseValue =
-  | any
+type AnyMatchers =
   | typeof Any
   | typeof AnyString
   | typeof AnyNumber
-  | typeof AnyBoolean
-  | ComposeMatcher;
+  | typeof AnyArray
+  | typeof AnyObject
+  | typeof AnyBoolean;
 
-type CaseFn<T> = (x: CaseValue) => T;
-type Case<T> = [CaseValue, CaseFn<T>];
-type DefaultFn<T> = () => T;
+type CaseValue<T> = T extends Array<any>
+  ? T | AnyMatchers | Array<AnyMatchers> | ComposeMatcher<T> | StrictMatcher<T>
+  : T | AnyMatchers | ComposeMatcher<T> | StrictMatcher<T>;
 
-const compare = (testCase: CaseValue, value: any): boolean => {
-  try {
-    if (testCase?._type === ComposeMatcherSymbol)
-      return testCase.conditions.every((c: CaseValue) => compare(c, value));
-  } catch (e) { }
+type CaseFn<T, U> = (x: T) => U;
+type Case<T, U> = [CaseValue<T>, CaseFn<T, U>];
 
-  try {
-    if (testCase?._type === StrictMatcherSymbol)
-      return JSON.stringify(testCase.value) === JSON.stringify(value);
-  } catch (e) { }
+class PatternMatcher<T, U> {
+  private cases: Case<T, U>[] = [];
 
-  if (testCase === Any && value !== undefined) return true;
-  if (testCase === AnyNumber && typeof value === 'number') return true;
-  if (testCase === AnyString && typeof value === 'string') return true;
-  if (testCase === AnyBoolean && typeof value === 'boolean') return true;
-  if (testCase === AnyArray && Array.isArray(value)) return true;
-  if (testCase === AnyFunction && typeof value === 'function') return true;
-  if (
-    testCase === AnyObject &&
-    typeof value === 'object' &&
-    !Array.isArray(value)
-  )
-    return true;
+  constructor(private value: T) {}
 
-  if (typeof testCase === 'function') {
-    try {
-      return testCase(value);
-    } catch (e) {
-      return false;
-    }
+  case(pattern: CaseValue<T>, caseFn: CaseFn<T, U>) {
+    this.cases = [...this.cases, [pattern, caseFn]];
+    return this;
   }
 
-  if (typeof testCase === 'object') {
-    if (typeof value === 'object') {
-      return Object.keys(testCase).every((key: string) =>
-        value.hasOwnProperty(key) ? compare(testCase[key], value[key]) : false
-      );
+  default(fn: () => U): U {
+    const result = this.getResult();
+
+    return result.match({
+      Some: (value: U) => value,
+      None: () => fn(),
+    });
+  }
+
+  unwrap(): U {
+    const result = this.getResult();
+
+    return result.match({
+      Some: (value: U) => value,
+      None: () => {
+        throw new Error('Unhandled case');
+      },
+    });
+  }
+
+  toOption(): Option<U> {
+    return this.getResult();
+  }
+
+  toResult(): Result<U, Error> {
+    return this.getResult().match({
+      Some: (v: U) => Ok(v),
+      None: () => Err(new Error('Unhandled case')),
+    });
+  }
+
+  private getResult(): Option<U> {
+    const result = this.cases.find(([pattern]) =>
+      this.compare(pattern, this.value)
+    );
+
+    if (!result) return None();
+
+    return Some(result[1](this.value));
+  }
+
+  private isComposeMatcher<D>(testCase: CaseValue<D>) {
+    if ('_type' in (testCase as ComposeMatcher<D>)) {
+      if ((testCase as ComposeMatcher<D>)?._type === ComposeMatcherSymbol)
+        return true;
+
+      return false;
     }
+
     return false;
   }
 
-  if (typeof testCase !== typeof value) return false;
+  private isStrictMatcher<D>(testCase: CaseValue<D>) {
+    if ('_type' in (testCase as StrictMatcher<D>)) {
+      if ((testCase as StrictMatcher<D>)?._type === StrictMatcherSymbol)
+        return true;
 
-  return testCase === value;
-};
+      return false;
+    }
 
-const findCase =
-  <T>(value: T) =>
-    ([testCase]: Case<T>) =>
-      compare(testCase, value);
+    return false;
+  }
 
-const matcher = <T>(value: unknown, cases: Case<T>[], xCase?: Case<T>) => {
-  const updatedCases = xCase ? [...cases, xCase] : [...cases];
+  private compare<D>(testCase: CaseValue<D>, value: D): boolean {
+    try {
+      if (this.isComposeMatcher(testCase))
+        return (testCase as ComposeMatcher<D>).conditions.every(
+          (c: CaseValue<D>) => this.compare(c, value)
+        );
+    } catch (e) {}
 
-  return {
-    case: (testCase: CaseValue, testCaseFn: CaseFn<T>) =>
-      matcher<T>(value, updatedCases, [testCase, testCaseFn]),
-    default: (defaultFn: DefaultFn<T>) => {
-      const [, fn] = updatedCases.find(findCase(value)) || [
-        undefined,
-        defaultFn,
-      ];
-      return fn(value);
-    },
-  };
-};
+    try {
+      if (this.isStrictMatcher(testCase))
+        return (
+          JSON.stringify((testCase as StrictMatcher<D>).value) ===
+          JSON.stringify(value)
+        );
+    } catch (e) {}
 
-const match = <T>(x: unknown) => matcher<T>(x, []);
+    if (testCase === Any && value !== undefined) return true;
+    if (testCase === AnyNumber && typeof value === 'number') return true;
+    if (testCase === AnyString && typeof value === 'string') return true;
+    if (testCase === AnyBoolean && typeof value === 'boolean') return true;
+    if (testCase === AnyArray && Array.isArray(value)) return true;
+    if (testCase === AnyFunction && typeof value === 'function') return true;
+    if (
+      testCase === AnyObject &&
+      typeof value === 'object' &&
+      !Array.isArray(value)
+    )
+      return true;
+
+    if (typeof testCase === 'function') {
+      try {
+        return testCase(value);
+      } catch (e) {
+        return false;
+      }
+    }
+
+    if (typeof testCase === 'object' && !!testCase) {
+      if (typeof value === 'object' && !!value) {
+        return Object.keys(testCase).every((key) =>
+          value.hasOwnProperty(key)
+            ? this.compare((testCase as any)[key], (value as any)[key])
+            : false
+        );
+      }
+      return false;
+    }
+
+    if (typeof testCase !== typeof value) return false;
+
+    return testCase === value;
+  }
+}
+
+const match = <T, U>(x: T) => new PatternMatcher<T, U>(x);
 
 export default match;
