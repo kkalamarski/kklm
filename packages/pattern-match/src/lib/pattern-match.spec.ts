@@ -355,4 +355,52 @@ describe('Pattern Matching TS', () => {
       expect(err.isErr()).toBe(true);
     });
   });
+
+  describe('documentation example', () => {
+    it('should parse a user', () => {
+      interface User {
+        name: string;
+        age: number;
+      }
+
+      const jsonString = '{ "name": "correct name", "age": 4 }';
+
+      const user = match<unknown, User>(JSON.parse(jsonString))
+        .case(
+          { name: AnyString, age: AnyNumber },
+          (user: unknown) => user as User
+        )
+        .toResult();
+
+      const val = user.match({
+        Ok: (_user) => 'user parsed correctly',
+        Err: (_err) => 'handle parse error',
+      });
+
+      expect(val).toBe('user parsed correctly')
+    });
+
+    it('should not parse an incorrect user', () => {
+      interface User {
+        name: string;
+        age: number;
+      }
+
+      const jsonString = '{ "definetly": "not an user" }';
+
+      const user = match<unknown, User>(JSON.parse(jsonString))
+        .case(
+          { name: AnyString, age: AnyNumber },
+          (user: unknown) => user as User
+        )
+        .toResult();
+
+      const val = user.match({
+        Ok: (_user) => 'user parsed correctly',
+        Err: (_err) => 'handle parse error',
+      });
+
+      expect(val).toBe('handle parse error');
+    });
+  });
 });
