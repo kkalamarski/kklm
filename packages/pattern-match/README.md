@@ -135,9 +135,12 @@ interface User {
 
 const jsonString = '{ "definetly": "not an user" }'
 
-const user = match<User | null>(JSON.parse(jsonString))
+const user = match<unknown, User>(JSON.parse(jsonString))
   .case({ name: AnyString, age: AnyNumber }, (user: unknown) => user as User)
-  .default(() => null)
+  .toResult()
 
-user && user.name // user will be null if the structure is not right, otherwise it's always guaranteed to be of User type.
+user.match({
+  Ok: user => "user parsed correctly",
+  Err: _err => "handle parse error"
+})
 ```
