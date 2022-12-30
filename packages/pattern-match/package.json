@@ -1,6 +1,6 @@
 {
   "name": "@kklm/pattern-match",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "commonjs",
   "gitHead": "86d8771ccdc3e61271ad00d2ff5f84b26c4ccee9",
   "main": "dist/src/index.js",
